@@ -8,6 +8,7 @@ Usage:
 3. To decrypt, run `python fig_leaf.py <path to encrypted file location> <path to output location> <path to private key> --decrypt`
 """
 
+import pickle
 import argparse
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto import Random
@@ -26,14 +27,14 @@ def encrypt(data, public_key):
     public_key = RSA.importKey(public_key)
     rsa_cipher = PKCS1_OAEP.new(public_key)
     encrypted_symmetric_key = rsa_cipher.encrypt(symmetric_key)
-    return encrypted_symmetric_key + encrypted_data
+    return [encrypted_symmetric_key, encrypted_data]
 
 def decrypt(encrypted_data, private_key):
     """
     Given RSA-encrypted symmetric key and symmetrically-encrypted data, returns original data.
     """
-    encrypted_symmetric_key = encrypted_data[0:512]
-    symmetrically_encrypted_data = encrypted_data[512:]
+    encrypted_symmetric_key = encrypted_data[0]
+    symmetrically_encrypted_data = encrypted_data[1]
     # Decrypt RSA-encrypted symmetric key
     private_key = RSA.importKey(private_key)
     rsa_cipher = PKCS1_OAEP.new(private_key)
@@ -70,7 +71,7 @@ def main():
     # decrypting
     if args.decrypt:
         with open(input_file_location, 'rb') as f:
-            encrypted_data = f.read()
+            encrypted_data = pickle.load(f)
         decrypted_data = decrypt(encrypted_data, key)
         with open(output_file_location, 'wb') as f:
             f.write(decrypted_data)
@@ -81,7 +82,7 @@ def main():
             data = f.read()
         encrypted_data = encrypt(data, key)
         with open(output_file_location, 'wb') as f:
-            f.write(encrypted_data)
+            pickle.dump(encrypted_data, f)
         print('Encrypted data to %s' % output_file_location)
 
 if __name__ == '__main__':
