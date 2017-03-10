@@ -82,7 +82,7 @@ def main():
             data = f.read()
         encrypted_data = encrypt(data, key)
         with open(output_file_location, 'wb') as f:
-            pickle.dump(encrypted_data, f)
+            pickle.dump(encrypted_data, f, protocol=2)
         print('Encrypted data to %s' % output_file_location)
 
 if __name__ == '__main__':
